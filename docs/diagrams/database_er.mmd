@@ -1,0 +1,179 @@
+erDiagram
+    ROLES ||--o{ USER_ROLES : "assigned to"
+    USERS ||--o{ USER_ROLES : "holds"
+    USERS ||--o{ VERIFICATION_TOKENS : "has"
+    USERS ||--o{ PASSWORD_RESETS : "requests"
+    USERS ||--o{ USER_RECENT_VIEWS : "tracks"
+    USERS ||--o{ USER_BOOKMARKS : "saves"
+    USERS ||--o{ NOTIFICATIONS : "receives"
+    USERS ||--o{ AUDIT_LOGS : "triggers"
+    USERS ||--o{ RESOURCES : "uploads"
+    USERS ||--o{ ANNOUNCEMENTS : "publishes"
+
+    COURSES ||--o{ SEMESTERS : "contains"
+    COURSES ||--o{ SUBJECTS : "belongs to"
+    SEMESTERS ||--o{ SUBJECTS : "schedules"
+    COURSES ||--o{ ANNOUNCEMENTS : "targets"
+
+    SUBJECTS ||--o{ RESOURCES : "categorized in"
+    RESOURCE_CATEGORIES ||--o{ RESOURCES : "classifies"
+    RESOURCES ||--o{ RESOURCE_FILES : "stores"
+    RESOURCES ||--o{ USER_BOOKMARKS : "referenced in"
+    RESOURCES ||--o{ USER_RECENT_VIEWS : "tracked in"
+
+    SYSTEM_SETTINGS {
+        bigint id PK
+        varchar key UK
+        varchar value
+        varchar category
+        varchar description
+    }
+
+    ROLES {
+        bigint id PK
+        varchar name UK
+        varchar description
+        timestamp created_at
+    }
+
+    USERS {
+        bigint id PK
+        varchar email UK
+        varchar password_hash
+        varchar full_name
+        varchar roll_number
+        bigint course_id FK
+        bigint semester_id FK
+        boolean is_active
+        boolean is_verified
+        timestamp created_at
+        timestamp last_login_at
+    }
+
+    USER_ROLES {
+        bigint user_id PK,FK
+        bigint role_id PK,FK
+    }
+
+    VERIFICATION_TOKENS {
+        bigint id PK
+        bigint user_id FK
+        varchar token_hash UK
+        timestamp expires_at
+        boolean is_used
+    }
+
+    PASSWORD_RESETS {
+        bigint id PK
+        bigint user_id FK
+        varchar token_hash UK
+        timestamp expires_at
+        boolean is_used
+    }
+
+    COURSES {
+        bigint id PK
+        varchar name
+        varchar code UK
+        text description
+        boolean is_active
+    }
+
+    SEMESTERS {
+        bigint id PK
+        varchar name
+        integer semester_number
+        bigint course_id FK
+        boolean is_active
+    }
+
+    SUBJECTS {
+        bigint id PK
+        varchar name
+        varchar code UK
+        bigint course_id FK
+        bigint semester_id FK
+        boolean is_active
+    }
+
+    RESOURCE_CATEGORIES {
+        bigint id PK
+        varchar name UK
+        varchar slug UK
+        text description
+        varchar icon_class
+    }
+
+    RESOURCES {
+        bigint id PK
+        varchar title
+        text description
+        varchar resource_type
+        bigint subject_id FK
+        bigint category_id FK
+        bigint uploader_id FK
+        varchar external_url
+        boolean is_downloadable
+        boolean is_published
+        bigint view_count
+        bigint download_count
+        timestamp created_at
+    }
+
+    RESOURCE_FILES {
+        bigint id PK
+        bigint resource_id FK
+        varchar file_name
+        varchar file_path
+        bigint file_size
+        varchar mime_type
+        varchar storage_type
+    }
+
+    USER_BOOKMARKS {
+        bigint id PK
+        bigint user_id FK
+        bigint resource_id FK
+        timestamp created_at
+    }
+
+    USER_RECENT_VIEWS {
+        bigint id PK
+        bigint user_id FK
+        bigint resource_id FK
+        timestamp viewed_at
+    }
+
+    ANNOUNCEMENTS {
+        bigint id PK
+        varchar title
+        text content
+        bigint author_id FK
+        bigint target_course_id FK
+        varchar priority
+        boolean is_published
+        timestamp created_at
+    }
+
+    NOTIFICATIONS {
+        bigint id PK
+        bigint user_id FK
+        varchar title
+        text message
+        varchar notification_type
+        varchar link_url
+        boolean is_read
+        timestamp created_at
+    }
+
+    AUDIT_LOGS {
+        bigint id PK
+        bigint user_id FK
+        varchar action
+        varchar entity_name
+        varchar entity_id
+        varchar ip_address
+        varchar user_agent
+        timestamp created_at
+    }
+

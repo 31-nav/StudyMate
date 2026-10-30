@@ -1,0 +1,33 @@
+sequenceDiagram
+    autonumber
+    actor Admin as Faculty / Administrator
+    participant Browser as Admin Web Portal
+    participant Filter as AuthorizationFilter (ROLE_ADMIN)
+    participant AdminServlet as AdminServlet
+    participant AcadSvc as AcademicService
+    participant AnnSvc as AnnouncementService
+    participant AuditSvc as AuditService
+    participant DB as PostgreSQL 16
+
+    Note over Admin, DB: Academic Structure Management
+    Admin->>Browser: Opens Subject Management & Clicks "Create Subject"
+    Browser->>Filter: POST /admin/subjects/create (CSRF Token)
+    Filter->>AdminServlet: Authorize & Route
+    AdminServlet->>AcadSvc: createSubject(name, code, courseId, semesterId)
+    AcadSvc->>DB: INSERT INTO subjects (name, code, course_id, semester_id, is_active)
+    DB-->>AcadSvc: Subject Created (id=15)
+    AcadSvc->>AuditSvc: logActivity(adminId, "CREATE_SUBJECT", "id=15", ip)
+    AuditSvc->>DB: INSERT INTO audit_logs
+    AcadSvc-->>AdminServlet: Success
+    AdminServlet-->>Browser: Redirect with Flash Success Message
+
+    Note over Admin, DB: Publishing Announcements
+    Admin->>Browser: Fills Announcement Form (Title, Body, Target Course)
+    Browser->>Filter: POST /admin/announcements/create (CSRF Token)
+    Filter->>AdminServlet: Authorize & Route
+    AdminServlet->>AnnSvc: publishAnnouncement(adminId, title, content, targetCourseId, priority)
+    AnnSvc->>DB: INSERT INTO announcements
+    AnnSvc->>DB: Bulk INSERT INTO notifications for enrolled students
+    AnnSvc->>AuditSvc: logActivity(adminId, "CREATE_ANNOUNCEMENT", title, ip)
+    AdminServlet-->>Browser: Redirect to announcements listing with confirmation
+

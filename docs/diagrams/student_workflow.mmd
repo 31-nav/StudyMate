@@ -1,0 +1,49 @@
+sequenceDiagram
+    autonumber
+    actor Student as Authenticated Student
+    participant UI as Student Portal UI (JSP + JS)
+    participant Sec as Auth & CSRF Filters
+    participant ResServlet as ResourceServlet
+    participant BookServlet as BookmarkServlet
+    participant ResSvc as ResourceService
+    participant PersSvc as PersonalizationService
+    participant DB as PostgreSQL 16
+    participant Storage as File Storage Disk
+
+    Note over Student, Storage: Browsing Academic Hierarchy & Materials
+    Student->>UI: Selects Course & Semester (e.g., Computer Science / Sem 3)
+    UI->>Sec: GET /student/resources?courseId=1&semesterId=3
+    Sec->>ResServlet: Forward Request
+    ResServlet->>ResSvc: getResourcesByCourseAndSemester(1, 3)
+    ResSvc->>DB: Query resources, subjects, categories
+    DB-->>ResSvc: Filtered Resource List
+    ResSvc-->>ResServlet: List<ResourceSummaryDto>
+    ResServlet-->>UI: Render resources.jsp with Material Cards
+
+    Note over Student, Storage: Viewing Embedded Educational Resource
+    Student->>UI: Clicks "View Resource" (PDF / Image)
+    UI->>Sec: GET /student/resources/view?id=42
+    Sec->>ResServlet: Forward Request
+    ResServlet->>ResSvc: getResourceDetails(42)
+    ResSvc->>DB: Fetch Resource & Increment View Count
+    ResServlet->>PersSvc: recordRecentView(studentId, 42)
+    PersSvc->>DB: UPSERT user_recent_views
+    ResServlet-->>UI: Render view-resource.jsp with embedded viewer iframe
+
+    UI->>ResServlet: GET /student/resources/stream?id=42 (Inline stream)
+    ResServlet->>ResSvc: getFileStream(42)
+    ResSvc->>Storage: Read file from C:/StudyMate/storage/uploads/...
+    Storage-->>ResSvc: InputStream
+    ResServlet-->>UI: Stream bytes with Content-Type: application/pdf
+
+    Note over Student, Storage: Bookmarking Learning Asset
+    Student->>UI: Clicks Bookmark Toggle Icon
+    UI->>Sec: POST /student/bookmarks/toggle (JSON payload, X-CSRF-Token header)
+    Sec->>BookServlet: Forward Request
+    BookServlet->>PersSvc: toggleBookmark(studentId, 42)
+    PersSvc->>DB: Check & Toggle user_bookmarks
+    DB-->>PersSvc: Bookmark Added / Removed Status
+    PersSvc-->>BookServlet: Updated Bookmark State
+    BookServlet-->>UI: JSON Response { success: true, bookmarked: true }
+    UI-->>Student: Update UI bookmark indicator smoothly
+

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+        <!-- Database connection settings -->
+        <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
+        <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/studymate</property>
+        <property name="hibernate.connection.username">postgres</property>
+        <property name="hibernate.connection.password">postgres</property>
+
+        <!-- JDBC connection pool settings -->
+        <property name="hibernate.connection.pool_size">10</property>
+        <property name="hibernate.connection.autocommit">false</property>
+
+        <!-- SQL dialect -->
+        <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
+
+        <!-- Echo all executed SQL to stdout -->
+        <property name="hibernate.show_sql">false</property>
+        <property name="hibernate.format_sql">true</property>
+
+        <!-- Drop and re-create or update schema on startup -->
+        <property name="hibernate.hbm2ddl.auto">update</property>
+
+        <!-- Contextual session management -->
+        <property name="hibernate.current_session_context_class">thread</property>
+
+        <!-- Entity mappings -->
+        <mapping class="com.studymate.model.entity.User"/>
+        <mapping class="com.studymate.model.entity.Role"/>
+        <mapping class="com.studymate.model.entity.Permission"/>
+        <mapping class="com.studymate.model.entity.Course"/>
+        <mapping class="com.studymate.model.entity.Semester"/>
+        <mapping class="com.studymate.model.entity.Subject"/>
+        <mapping class="com.studymate.model.entity.ResourceCategory"/>
+        <mapping class="com.studymate.model.entity.Resource"/>
+        <mapping class="com.studymate.model.entity.ResourceFile"/>
+        <mapping class="com.studymate.model.entity.Bookmark"/>
+        <mapping class="com.studymate.model.entity.RecentlyViewed"/>
+        <mapping class="com.studymate.model.entity.Announcement"/>
+        <mapping class="com.studymate.model.entity.Notification"/>
+        <mapping class="com.studymate.model.entity.DownloadLog"/>
+        <mapping class="com.studymate.model.entity.AuditLog"/>
+        <mapping class="com.studymate.model.entity.PasswordResetToken"/>
+        <mapping class="com.studymate.model.entity.EmailVerificationToken"/>
+        <mapping class="com.studymate.model.entity.AdministratorInvitation"/>
+    </session-factory>
+</hibernate-configuration>
+

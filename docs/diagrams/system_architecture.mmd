@@ -1,0 +1,55 @@
+graph TD
+    subgraph Client["Client Tier (Browser)"]
+        UI["JSP 3.1 Views + JSTL + Bootstrap 5"]
+        JS["Vanilla JS Modules (Theme, Bookmarks, Nav, PDF/Img Viewer)"]
+        CSS["Glassmorphism CSS Design System"]
+    end
+
+    subgraph Security["Security & Interception Tier"]
+        SHF["SecurityHeadersFilter (CSP, HSTS, X-Frame, XSS)"]
+        CF["CsrfFilter (Anti-CSRF Tokens for Mutating Requests)"]
+        AF["AuthenticationFilter (Session & Remember-Me)"]
+        AZF["AuthorizationFilter (RBAC: Student, Admin, SuperAdmin)"]
+    end
+
+    subgraph Controller["Controller Tier (Jakarta Servlets)"]
+        HS["HomeServlet (/)"]
+        AS["AuthServlet (/auth/*)"]
+        DS["DashboardServlet (/student/dashboard)"]
+        CS["CourseServlet (/courses, /student/courses)"]
+        SS["SubjectServlet (/subjects, /student/subjects)"]
+        RS["ResourceServlet (/resources, /student/resources)"]
+        BS["BookmarkServlet (/student/bookmarks)"]
+        NS["NotificationServlet (/student/notifications)"]
+        ADS["AdminServlet (/admin/*)"]
+        SADS["SuperAdminServlet (/superadmin/*)"]
+    end
+
+    subgraph Service["Service Tier (Business Logic)"]
+        AuthSvc["AuthService (Bcrypt, Verification, Password Reset)"]
+        AcadSvc["AcademicService (Courses, Semesters, Subjects)"]
+        ResSvc["ResourceService (Upload, MIME Validation, Stream)"]
+        PersSvc["PersonalizationService (Bookmarks, Recent Views)"]
+        AnnSvc["AnnouncementService (Targeted Broadcasts)"]
+        UserSvc["UserService (Profile, Admin Provisioning)"]
+        AuditSvc["AuditService (Activity & Security Event Logging)"]
+        DashSvc["DashboardService (Role-Specific Metric Aggregates)"]
+    end
+
+    subgraph Persistence["Persistence & Data Access Tier"]
+        Hibernate["Hibernate ORM 6.4 (JPA Entities, Transactions)"]
+        JDBC["Direct JDBC (HikariCP / JdbcReportingDao)"]
+    end
+
+    subgraph Storage["Storage Tier"]
+        DB[(PostgreSQL 16 Database)]
+        FS[("Physical File Storage (C:/StudyMate/storage/uploads)")]
+    end
+
+    Client -->|HTTP / HTTPS| Security
+    Security --> Controller
+    Controller --> Service
+    Service --> Persistence
+    Persistence --> DB
+    ResSvc -->|Binary Read/Write| FS
+

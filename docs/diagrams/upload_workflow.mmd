@@ -1,0 +1,38 @@
+sequenceDiagram
+    autonumber
+    actor Admin as Administrator
+    participant Browser as Admin Browser
+    participant Filter as Security & CSRF Filters
+    participant AdminServlet as AdminServlet
+    participant ResSvc as ResourceService
+    participant Val as FileValidator (MIME & Extension)
+    participant Disk as Local File Storage (Outside Web Root)
+    participant DB as PostgreSQL 16
+    participant Audit as AuditService
+
+    Admin->>Browser: Submits Upload Form (Title, Subject, Category, File Part)
+    Browser->>Filter: POST /admin/resources/create (multipart/form-data)
+    Filter->>AdminServlet: Validate Session & CSRF
+    AdminServlet->>ResSvc: createResource(ResourceCreateDto, Part filePart)
+    
+    ResSvc->>Val: validateFile(filePart)
+    Note over Val: Checks: 1. Magic byte MIME type<br/>2. Allowed extension (.pdf, .png, etc.)<br/>3. File size <= 50MB<br/>4. Anti-traversal check on filename
+    Val-->>ResSvc: File Validation Passed
+
+    ResSvc->>ResSvc: Generate UUID storage key (e.g., 3f9a8...a1b.pdf)
+    ResSvc->>ResSvc: Resolve target dir: C:/StudyMate/storage/uploads/YYYY/MM/
+    ResSvc->>Disk: Stream file chunks from Part to disk file
+    Disk-->>ResSvc: Saved (Size: 4.8MB, SHA-256: e3b0c442...)
+
+    ResSvc->>DB: Begin Transaction
+    ResSvc->>DB: INSERT INTO resources (title, description, subject_id, category_id, uploader_id)
+    DB-->>ResSvc: Generated resource_id = 101
+    ResSvc->>DB: INSERT INTO resource_files (resource_id, file_name, file_path, file_size, mime_type, storage_type)
+    ResSvc->>DB: Commit Transaction
+
+    ResSvc->>Audit: logActivity(uploaderId, "RESOURCE_UPLOAD", "ID: 101", ip)
+    Audit->>DB: INSERT INTO audit_logs
+
+    ResSvc-->>AdminServlet: ResourceCreatedResponse(id=101)
+    AdminServlet-->>Browser: Redirect to /admin/resources with success alert
+

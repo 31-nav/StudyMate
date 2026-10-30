@@ -1,0 +1,44 @@
+sequenceDiagram
+    autonumber
+    actor User as Student / Administrator
+    participant Browser as Client Browser
+    participant Filter as Security & Auth Filters
+    participant Servlet as AuthServlet
+    participant Service as AuthService
+    participant Hash as SecurityUtil (BCrypt / SHA-256)
+    participant Dao as UserDao
+    participant DB as PostgreSQL 16
+
+    Note over User, DB: User Registration Flow
+    User->>Browser: Enters Full Name, Email, Password, Course
+    Browser->>Filter: POST /auth/register (CSRF Token Verified)
+    Filter->>Servlet: Forward to AuthServlet.handleRegister()
+    Servlet->>Service: registerStudent(RegisterRequest)
+    Service->>Dao: findByEmail(email)
+    Dao->>DB: SELECT * FROM users WHERE email = ?
+    DB-->>Dao: No record found
+    Service->>Hash: hashPassword(rawPassword, cost=12)
+    Hash-->>Service: $2a$12$...
+    Service->>Hash: generateSecureToken() & hashToken()
+    Service->>Dao: save(User with ROLE_STUDENT, is_verified=false)
+    Dao->>DB: INSERT INTO users, user_roles, verification_tokens
+    Service-->>Servlet: Registration Successful (Token Generated)
+    Servlet-->>Browser: Redirect to /auth/verify-email?email=...
+
+    Note over User, DB: Login & Authentication Flow
+    User->>Browser: Enters Email & Password
+    Browser->>Filter: POST /auth/login (CSRF Validated)
+    Filter->>Servlet: Forward to AuthServlet.handleLogin()
+    Servlet->>Service: authenticate(email, rawPassword, ipAddress)
+    Service->>Dao: findByEmail(email)
+    Dao->>DB: SELECT * FROM users JOIN roles...
+    DB-->>Dao: User Record (Status, Password Hash)
+    Service->>Hash: checkPassword(rawPassword, storedHash)
+    Hash-->>Service: Valid Match (True)
+    Service->>Service: Check is_active & is_verified
+    Service->>Dao: recordLoginTimestamp(userId)
+    Service-->>Servlet: AuthResult(User, Roles, Permissions)
+    Servlet->>Servlet: Invalidate old session & create new session (Fixation Protection)
+    Servlet->>Servlet: Set Session Attributes (user_id, roles, csrf_token)
+    Servlet-->>Browser: HTTP 302 Redirect to Role Dashboard (Student / Admin / SuperAdmin)
+
